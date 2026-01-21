@@ -1,12 +1,12 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `farkle-pwa-${CACHE_VERSION}`;
 
 const ASSETS = [
   './',
-  './index.html?v=2',
-  './style.css?v=2',
-  './app.js?v=2',
-  './manifest.webmanifest?v=2',
+  './index.html?v=3',
+  './style.css?v=3',
+  './app.js?v=3',
+  './manifest.webmanifest?v=3',
   './assets/icon-192.png',
   './assets/icon-512.png'
 ];
