@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7b4a2b" />
+  <title>Farkle PWA</title>
+
+  <link rel="manifest" href="manifest.webmanifest?v=2" />
+  <link rel="stylesheet" href="style.css?v=2" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <div id="app" class="app">
+    <!-- TOP HUD -->
+    <header class="hud">
+      <div class="hudLeft">
+        <button class="hudIcon" id="btnBack" title="Back" aria-label="Back">‹</button>
+      </div>
+
+      <div class="hudCenter">
+        <div class="goalPill">
+          <span class="goalIcon">🎯</span>
+          <span id="goalText">5000 POINTS</span>
+        </div>
+      </div>
+
+      <div class="hudRight">
+        <button class="hudIcon" id="btnResetAll" title="Reset" aria-label="Reset">⚙️</button>
+      </div>
+    </header>
+
+    <!-- TOP PANELS -->
+    <section class="topPanels">
+      <div class="playerCard">
+        <div class="avatar" aria-hidden="true">🙂</div>
+        <div class="playerName" id="p1Name">You</div>
+        <div class="playerScore" id="youScore">0</div>
+        <div class="playerSub" id="youBoardStatus">Need 500 to board</div>
+      </div>
+
+      <div class="playerCard">
+        <div class="avatar" aria-hidden="true">🤖</div>
+        <div class="playerName" id="p2Name">CPU</div>
+        <div class="playerScore" id="cpuScore">0</div>
+        <div class="playerSub" id="cpuBoardStatus">Need 500 to board</div>
+      </div>
+
+      <div class="scoreCard">
+        <div class="scoreCardHead">
+          <div class="scoreCardTitle">Super Scores</div>
+          <div class="scoreCardMini" id="turnBadge">Your turn</div>
+        </div>
+
+        <div class="scoreTable">
+          <div class="scoreRow"><span>Single 1</span><b>100</b></div>
+          <div class="scoreRow"><span>Single 5</span><b>50</b></div>
+          <div class="scoreRow"><span>Three of a kind</span><b>1000 / face×100</b></div>
+
+          <div class="scoreDivider"></div>
+
+          <div class="scoreRow"><span>Four of a kind</span><b>1000</b></div>
+          <div class="scoreRow"><span>Five of a kind</span><b>2000</b></div>
+          <div class="scoreRow"><span>Six of a kind</span><b>3000</b></div>
+          <div class="scoreRow"><span>1–6 Straight</span><b>1500</b></div>
+          <div class="scoreRow"><span>3 Pairs</span><b>1500</b></div>
+          <div class="scoreRow"><span>4 of a kind + 1 pair</span><b>1500</b></div>
+          <div class="scoreRow"><span>2 Triples</span><b>2500</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAY AREA -->
+    <main class="playArea" id="main">
+      <section class="parchment">
+        <div class="turnInfo">
+          <div class="turnStat">
+            <div class="turnLabel">Turn Points</div>
+            <div class="turnValue" id="turnPoints">0</div>
+          </div>
+          <div class="turnStat">
+            <div class="turnLabel">Selected</div>
+            <div class="turnValue" id="selectedPoints">0</div>
+          </div>
+          <div class="turnStat">
+            <div class="turnLabel">Dice Left</div>
+            <div class="turnValue" id="diceLeft">6</div>
+          </div>
+        </div>
+
+        <!-- KEPT PYRAMID -->
+        <div class="keptBoard">
+          <div class="keptPyramid" id="keptPyramid" aria-label="Kept dice pyramid"></div>
+        </div>
+
+        <!-- LOG -->
+        <div class="logCard">
+          <div class="logHead">
+            <div class="logTitle">Turn Log</div>
+            <button class="miniBtn" id="btnClearLog">Clear</button>
+          </div>
+          <div class="log" id="turnLog" aria-label="Log"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- BOTTOM TRAY -->
+    <section class="tray">
+      <div class="traySlots" id="traySlots" aria-label="Dice tray"></div>
+
+      <div class="trayActions">
+        <button class="btnSmall" id="btnKeep" disabled>KEEP</button>
+        <button class="btnSmall" id="btnBank" disabled>BANK</button>
+        <button class="btnSmall" id="btnDone" disabled>DONE</button>
+      </div>
+
+      <button class="rollBtn" id="btnRoll">ROLL</button>
+    </section>
+
+    <!-- SETTINGS (simple modal-ish screen) -->
+    <div class="settingsSheet hidden" id="settingsSheet" role="dialog" aria-modal="true">
+      <div class="sheet">
+        <div class="sheetHead">
+          <div class="sheetTitle">Settings</div>
+          <button class="hudIcon" id="btnCloseSettings" aria-label="Close">✕</button>
+        </div>
+
+        <div class="sheetBody">
+          <div class="fieldRow">
+            <div>
+              <div class="fieldLabel">Min to board</div>
+              <div class="fieldSub">Must bank ≥ 500 to get on board</div>
+            </div>
+            <input class="inputSm" id="setMinEntry" inputmode="numeric" />
+          </div>
+
+          <div class="fieldRow">
+            <div>
+              <div class="fieldLabel">Win score</div>
+              <div class="fieldSub">First to 10,000 wins</div>
+            </div>
+            <input class="inputSm" id="setWinScore" inputmode="numeric" />
+          </div>
+
+          <div class="fieldRow">
+            <div>
+              <div class="fieldLabel">Hot dice</div>
+              <div class="fieldSub">If you score all dice, roll all 6 again</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="setHotDice" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="fieldRow">
+            <div>
+              <div class="fieldLabel">CPU style</div>
+              <div class="fieldSub">Standard (for now)</div>
+            </div>
+            <select class="inputSm" id="setCpuStyle">
+              <option value="conservative">Conservative</option>
+              <option value="standard">Standard</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </div>
+
+          <div class="sheetDivider"></div>
+
+          <button class="dangerBtn" id="btnResetEverything">Reset EVERYTHING</button>
+
+          <div class="tinyNote">
+            Cache-bust tip: bump <code>?v=3</code> in index links after big changes.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js?v=2"></script>
+  </div>
+</body>
+</html>
