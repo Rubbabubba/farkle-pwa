@@ -1,15 +1,14 @@
 /********************
- * Farkle PWA (v3)
- * - Above-fold fits screen
- * - Log below fold
+ * Farkle PWA (v4)
+ * - 3 action buttons row styled like Roll
  * - Auto-roll after KEEP
- * - Super Scores exact
+ * - Above-fold fits screen, log below fold
  ********************/
 
 const LS_KEYS = {
-  settings: 'farkle_settings_v3',
-  play: 'farkle_play_state_v3',
-  log: 'farkle_play_log_v3'
+  settings: 'farkle_settings_v4',
+  play: 'farkle_play_state_v4',
+  log: 'farkle_play_log_v4'
 };
 
 const DEFAULT_SETTINGS = {
@@ -53,18 +52,12 @@ function nowTime() {
 
 let settings = loadJSON(LS_KEYS.settings, DEFAULT_SETTINGS);
 
-/********************
- * CPU threshold
- ********************/
 function cpuThreshold(style) {
   if (style === 'conservative') return 650;
   if (style === 'aggressive') return 1200;
   return 900;
 }
 
-/********************
- * Dice / scoring
- ********************/
 function rollN(n) {
   const arr = [];
   for (let i=0;i<n;i++) arr.push(1 + Math.floor(Math.random()*6));
@@ -93,7 +86,6 @@ function scoreExact(countsIn) {
 
     let best = -Infinity;
 
-    // Special 6-dice combos
     if (dice === 6) {
       const isStraight = [1,2,3,4,5,6].every(f => counts[f] === 1);
       if (isStraight) best = Math.max(best, 1500);
@@ -109,40 +101,22 @@ function scoreExact(countsIn) {
       if (has4 && has2) best = Math.max(best, 1500);
     }
 
-    // 6/5/4 of a kind (flat per screenshot)
     for (let f=1; f<=6; f++) {
-      if (counts[f] >= 6) {
-        const c2 = counts.slice(); c2[f] -= 6;
-        best = Math.max(best, 3000 + rec(c2));
-      }
-      if (counts[f] >= 5) {
-        const c2 = counts.slice(); c2[f] -= 5;
-        best = Math.max(best, 2000 + rec(c2));
-      }
-      if (counts[f] >= 4) {
-        const c2 = counts.slice(); c2[f] -= 4;
-        best = Math.max(best, 1000 + rec(c2));
-      }
+      if (counts[f] >= 6) { const c2 = counts.slice(); c2[f]-=6; best = Math.max(best, 3000 + rec(c2)); }
+      if (counts[f] >= 5) { const c2 = counts.slice(); c2[f]-=5; best = Math.max(best, 2000 + rec(c2)); }
+      if (counts[f] >= 4) { const c2 = counts.slice(); c2[f]-=4; best = Math.max(best, 1000 + rec(c2)); }
     }
 
-    // 3 of a kind (1=1000, others=face*100)
     for (let f=1; f<=6; f++) {
       if (counts[f] >= 3) {
         const base = (f === 1) ? 1000 : f * 100;
-        const c2 = counts.slice(); c2[f] -= 3;
+        const c2 = counts.slice(); c2[f]-=3;
         best = Math.max(best, base + rec(c2));
       }
     }
 
-    // single 1/5
-    if (counts[1] >= 1) {
-      const c2 = counts.slice(); c2[1] -= 1;
-      best = Math.max(best, 100 + rec(c2));
-    }
-    if (counts[5] >= 1) {
-      const c2 = counts.slice(); c2[5] -= 1;
-      best = Math.max(best, 50 + rec(c2));
-    }
+    if (counts[1] >= 1) { const c2 = counts.slice(); c2[1]-=1; best = Math.max(best, 100 + rec(c2)); }
+    if (counts[5] >= 1) { const c2 = counts.slice(); c2[5]-=1; best = Math.max(best, 50 + rec(c2)); }
 
     if (best === -Infinity) best = -1;
     memo.set(key, best);
@@ -161,9 +135,6 @@ function scoreSelection(values) {
   return scoreExact(countDice(values));
 }
 
-/********************
- * State
- ********************/
 function newState() {
   return {
     currentPlayer: 'you',
@@ -173,8 +144,8 @@ function newState() {
     turnPoints: 0,
     diceLeft: 6,
 
-    tray: [],   // [{id,value,selected}]
-    kept: [],   // for pyramid display (current cycle)
+    tray: [],
+    kept: [],
     awaitingDone: false,
     gameOver: false
   };
@@ -183,9 +154,6 @@ function newState() {
 let state = loadJSON(LS_KEYS.play, newState());
 let log = loadJSON(LS_KEYS.log, []);
 
-/********************
- * Log
- ********************/
 function logLine(text, who='') {
   log.unshift({ t: Date.now(), who, text });
   log = log.slice(0, 90);
@@ -193,9 +161,7 @@ function logLine(text, who='') {
   renderLog();
 }
 
-/********************
- * UI refs
- ********************/
+/* UI refs */
 const elYouScore = document.getElementById('youScore');
 const elCpuScore = document.getElementById('cpuScore');
 const elYouBoard = document.getElementById('youBoardStatus');
@@ -265,7 +231,7 @@ function render() {
     elTray.appendChild(div);
   }
 
-  // Pyramid slots (1+2+3+4+5) centered in 6 columns
+  // Pyramid slots
   elPyr.innerHTML = '';
   const ROWS = [1,2,3,4,5];
   let idx = 0;
@@ -290,7 +256,7 @@ function render() {
     }
   }
 
-  // Buttons
+  // Buttons enabled/disabled
   const yourTurn = state.currentPlayer === 'you' && !state.gameOver;
   const hasTray = state.tray.length > 0;
 
@@ -317,9 +283,6 @@ function renderLog() {
   }
 }
 
-/********************
- * Actions
- ********************/
 function resetTurnToFresh() {
   state.turnPoints = 0;
   state.diceLeft = 6;
@@ -363,16 +326,14 @@ function scheduleAutoRollIfNeeded() {
   if (state.gameOver) return;
   if (state.currentPlayer !== 'you') return;
   if (state.awaitingDone) return;
-  if (state.tray.length) return; // only if tray is empty
+  if (state.tray.length) return;
   if (state.diceLeft <= 0) return;
 
   setTimeout(() => {
-    // re-check in case state changed
     if (state.gameOver) return;
     if (state.currentPlayer !== 'you') return;
     if (state.awaitingDone) return;
     if (state.tray.length) return;
-    // auto roll
     doRoll();
   }, AUTO_ROLL_DELAY_MS);
 }
@@ -387,7 +348,6 @@ function doKeep() {
   const score = scoreSelection(sel);
   if (score <= 0) { toast('Invalid selection'); return; }
 
-  // Move selected
   const keptDice = [];
   const remaining = [];
   for (const d of state.tray) {
@@ -398,15 +358,14 @@ function doKeep() {
   state.turnPoints += score;
   state.kept.push(...keptDice);
   state.diceLeft = remaining.length;
-  state.tray = []; // tray clears (matches reference flow)
+  state.tray = [];
 
   logLine(`You kept ${keptDice.join(', ')} (+${score}), turn=${state.turnPoints}`, 'you');
 
-  // Hot dice
   if (state.diceLeft === 0) {
     if (settings.hotDice) {
       state.diceLeft = 6;
-      state.kept = []; // reset pyramid for the next “cycle”
+      state.kept = [];
       logLine(`You hot dice!`, 'you');
       toast('Hot dice!');
     } else {
@@ -418,7 +377,6 @@ function doKeep() {
   saveJSON(LS_KEYS.play, state);
   render();
 
-  // AUTO-ROLL NEXT
   scheduleAutoRollIfNeeded();
 }
 
@@ -468,7 +426,6 @@ function doDone() {
     return;
   }
 
-  // CPU turn
   state.currentPlayer = 'cpu';
   resetTurnToFresh();
   saveJSON(LS_KEYS.play, state);
@@ -530,7 +487,6 @@ async function cpuTurn() {
     }
   }
 
-  // back to you
   state.currentPlayer = 'you';
   resetTurnToFresh();
   state.awaitingDone = false;
@@ -548,7 +504,6 @@ async function cpuTurn() {
 }
 
 function cpuChooseBestKeep(values) {
-  // brute-force all subsets (6 max): pick max score; tie-breaker keep more dice
   const n = values.length;
   let bestScore = 0;
   let bestKeep = [];
@@ -570,9 +525,7 @@ function cpuChooseBestKeep(values) {
   return bestKeep;
 }
 
-/********************
- * Settings
- ********************/
+/* Settings */
 function openSettings() {
   setMinEntry.value = String(settings.minEntry);
   setWinScore.value = String(settings.winScore);
@@ -605,9 +558,7 @@ function resetEverything() {
   render();
 }
 
-/********************
- * Events
- ********************/
+/* Events */
 btnRoll.addEventListener('click', doRoll);
 btnKeep.addEventListener('click', doKeep);
 btnBank.addEventListener('click', doBank);
@@ -630,18 +581,14 @@ setHotDice.addEventListener('change', () => { saveSettingsFromUI(); toast('Saved
 
 btnResetEverything.addEventListener('click', resetEverything);
 
-/********************
- * Service worker
- ********************/
+/* SW */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 
-/********************
- * Init
- ********************/
+/* Init */
 function init() {
   if (!state || typeof state !== 'object') state = newState();
   if (!state.you) state = newState();
