@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#e9ddcf" />
   <title>Farkle PWA</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=3" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="manifest" href="manifest.webmanifest?v=4" />
+  <link rel="stylesheet" href="style.css?v=4" />
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,7 +15,7 @@
 <body>
   <div id="app" class="app">
 
-    <!-- ABOVE THE FOLD (100vh) -->
+    <!-- ABOVE THE FOLD -->
     <section class="aboveFold" id="aboveFold">
 
       <!-- HUD -->
@@ -46,13 +46,12 @@
           <div class="playerSub" id="cpuBoardStatus">Need 500 to board</div>
         </div>
 
-        <div class="scoreCard">
+        <div class="scoreCard scoreCardWood">
           <div class="scoreCardHead">
             <div class="scoreCardTitle">Super Scores</div>
-            <div class="turnPill" id="turnBadge">Your turn</div>
           </div>
 
-          <div class="scoreTable">
+          <div class="scoreTable scoreTableWood">
             <div class="scoreRow"><span>Single 1</span><b>100</b></div>
             <div class="scoreRow"><span>Single 5</span><b>50</b></div>
             <div class="scoreRow"><span>Three of a kind</span><b>1000 / face×100</b></div>
@@ -70,7 +69,7 @@
         </div>
       </section>
 
-      <!-- CENTER (PYRAMID) -->
+      <!-- CENTER -->
       <section class="centerArea">
         <div class="statsRow">
           <div class="statBox">
@@ -92,35 +91,37 @@
         </div>
       </section>
 
-      <!-- BOTTOM (TRAY + ROLL) -->
+      <!-- BOTTOM -->
       <section class="bottomArea">
         <div class="tray">
           <div class="traySlots" id="traySlots" aria-label="Dice tray"></div>
         </div>
 
-        <div class="actionHints">
-          <button class="hintBtn" id="btnKeep" disabled>KEEP</button>
-          <button class="hintBtn" id="btnBank" disabled>BANK</button>
-          <button class="hintBtn" id="btnDone" disabled>DONE</button>
+        <!-- MATCH REFERENCE: 3 BUTTONS IN ONE ROW -->
+        <div class="actionRow">
+          <button class="rollBtn rollBtnSmall" id="btnKeep" disabled>KEEP</button>
+          <button class="rollBtn rollBtnSmall" id="btnBank" disabled>BANK</button>
+          <button class="rollBtn rollBtnSmall" id="btnDone" disabled>DONE</button>
         </div>
 
-        <button class="rollBtn" id="btnRoll">ROLL</button>
+        <button class="rollBtn rollBtnMain" id="btnRoll">ROLL</button>
       </section>
 
     </section>
 
-    <!-- BELOW THE FOLD (Turn Log) -->
+    <!-- BELOW THE FOLD LOG -->
     <section class="belowFold">
       <div class="logCard">
         <div class="logHead">
           <div class="logTitle">Turn Log</div>
+          <div class="turnPill" id="turnBadge">Your turn</div>
           <button class="miniBtn" id="btnClearLog">Clear</button>
         </div>
         <div class="log" id="turnLog" aria-label="Log"></div>
       </div>
     </section>
 
-    <!-- SETTINGS SHEET -->
+    <!-- SETTINGS -->
     <div class="settingsSheet hidden" id="settingsSheet" role="dialog" aria-modal="true">
       <div class="sheet">
         <div class="sheetHead">
@@ -173,7 +174,7 @@
           <button class="dangerBtn" id="btnResetEverything">Reset EVERYTHING</button>
 
           <div class="tinyNote">
-            Cache-bust tip: bump <code>?v=4</code> in index links after big changes.
+            Cache-bust tip: bump <code>?v=5</code> after big changes.
           </div>
         </div>
       </div>
@@ -181,7 +182,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
   </div>
 </body>
 </html>
