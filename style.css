@@ -11,16 +11,11 @@
   --textDark:#2a1a10;
   --textLight:#fff6e6;
 
-  --accent:#f5c76a;
-
   --wood1:#8a4f2c;
   --wood2:#6e3a1f;
-  --wood3:#5a2d17;
 
   --green1:#2fd175;
   --green2:#17a756;
-
-  --line: rgba(0,0,0,.14);
 }
 
 *{ box-sizing:border-box; }
@@ -32,12 +27,9 @@ body{
   color: var(--textDark);
 }
 
-.app{ min-height:100%; }
-
-/* ABOVE THE FOLD */
 .aboveFold{
   height: 100vh;
-  padding-bottom: calc(10px + var(--safeBottom));
+  padding-bottom: calc(8px + var(--safeBottom));
   display:flex;
   flex-direction:column;
 }
@@ -47,11 +39,11 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding: calc(10px + var(--safeTop)) 12px 6px;
+  padding: calc(8px + var(--safeTop)) 12px 4px;
   flex:0 0 auto;
 }
 .hudIcon{
-  width:40px; height:40px;
+  width:38px; height:38px;
   border-radius:999px;
   border: 2px solid rgba(0,0,0,.12);
   background: rgba(255,255,255,.55);
@@ -61,141 +53,133 @@ body{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:8px 12px;
+  padding:7px 12px;
   border-radius:999px;
   background: rgba(255,255,255,.65);
   border: 2px solid rgba(0,0,0,.10);
   font-weight:1000;
+  font-size:14px;
 }
-.goalIcon{ font-size:16px; }
+.goalIcon{ font-size:15px; }
 
-/* TOP PANELS */
-.topPanels{
+/* TOP STRIP: SHORT like reference */
+.topStrip{
   flex:0 0 auto;
   display:grid;
   grid-template-columns: 1fr 1fr 1.25fr;
   gap:10px;
-  padding: 0 12px 8px;
+  padding: 0 12px 6px;
 }
 
+/* Player cards compact */
 .playerCard{
   background: linear-gradient(180deg, var(--panel), var(--panel2));
   border-radius: 18px;
-  padding: 10px 10px 12px;
   border: 2px solid rgba(0,0,0,.14);
   color: var(--textLight);
   position:relative;
   overflow:hidden;
-  min-height: 148px;
+}
+.playerCard.compact{
+  padding: 8px 10px 10px;
+  height: 132px;           /* <<< controls the top strip height */
 }
 .playerCard:before{
   content:"";
-  position:absolute; inset:-30px -30px auto auto;
-  width:120px; height:120px;
+  position:absolute; inset:-28px -28px auto auto;
+  width:110px; height:110px;
   background: rgba(255,255,255,.06);
   border-radius:999px;
 }
 .avatar{
-  width:42px; height:42px;
+  width:38px; height:38px;
   border-radius:999px;
   background: rgba(255,255,255,.18);
   border:2px solid rgba(255,255,255,.14);
   display:flex; align-items:center; justify-content:center;
-  font-size:20px;
+  font-size:18px;
 }
-.playerName{ margin-top:8px; font-weight:1100; font-size:15px; }
-.playerScore{ font-weight:1300; font-size:34px; line-height:1; margin-top:4px; }
-.playerSub{ margin-top:6px; font-size:12px; opacity:.9; }
+.playerName{ margin-top:6px; font-weight:1100; font-size:14px; }
+.playerScore{ font-weight:1300; font-size:30px; line-height:1; margin-top:4px; }
+.playerSub{ margin-top:6px; font-size:12px; opacity:.92; }
 
-/* Super Scores styled closer to reference wood board */
+/* Super Scores compact + capped height */
 .scoreCard{
   border-radius: 18px;
-  padding: 10px;
-  min-height: 148px;
-  border: 2px solid rgba(0,0,0,.12);
-  background: rgba(255,255,255,.65);
+  border: 2px solid rgba(0,0,0,.14);
+  background: rgba(255,255,255,.60);
 }
-.scoreCardWood{
-  background: linear-gradient(180deg, rgba(138,79,44,.35), rgba(110,58,31,.22));
-  border: 2px solid rgba(0,0,0,.18);
+.scoreCard.compactScore{
+  height: 132px;          /* <<< matches player cards */
+  padding: 8px 10px 10px;
+  display:flex;
+  flex-direction:column;
 }
-.scoreCardHead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.scoreCardHead{ flex:0 0 auto; margin-bottom:6px; }
 .scoreCardTitle{
   font-weight:1200;
-  color: #2a1a10;
-  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  font-size:14px;
 }
-
-/* Table */
 .scoreTable{
+  flex:1 1 auto;
+  overflow:hidden;         /* <<< keep it short like reference */
   border-radius: 14px;
-  padding: 8px 10px;
-  border: 1px solid rgba(0,0,0,.14);
+  border: 1px solid rgba(0,0,0,.12);
   background: rgba(255,255,255,.55);
+  padding: 6px 8px;
 }
-.scoreTableWood{
-  background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.28));
+.scoreTable.compactTable .scoreRow{
+  padding: 2px 0;
+  font-size:11px;          /* <<< tighter */
 }
 .scoreRow{
   display:flex;
   justify-content:space-between;
-  gap:10px;
-  padding: 5px 0;
-  font-size:12px;
+  gap:8px;
 }
 .scoreRow b{ font-weight:1300; color:#b45309; }
-.scoreDivider{ height:1px; background: rgba(0,0,0,.10); margin: 6px 0; }
-
-/* CENTER */
-.centerArea{
-  flex:1 1 auto;
-  padding: 0 12px;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  min-height: 0;
+.scoreDivider{
+  height:1px;
+  background: rgba(0,0,0,.10);
+  margin: 4px 0;
 }
 
-.statsRow{
+/* PLAYFIELD: pyramid sits under top strip, hugged to left */
+.playField{
+  flex:1 1 auto;
   display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap:10px;
-  padding-top: 2px;
-  flex:0 0 auto;
+  grid-template-columns: 58% 42%; /* left pyramid + empty right like reference */
+  padding: 0 12px;
+  min-height:0;
 }
-.statBox{
-  background: rgba(255,255,255,.55);
-  border: 2px solid rgba(0,0,0,.10);
-  border-radius: 16px;
-  padding: 10px 10px;
-  text-align:center;
-}
-.statLabel{ font-size:12px; font-weight:1100; opacity:.7; }
-.statValue{ font-size:22px; font-weight:1300; margin-top:2px; }
-
-.pyramidWrap{
-  flex:1 1 auto;
+.pyramidLeft{
   display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height: 0;
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding-top: 4px;
 }
+.rightEmpty{
+  /* intentionally blank area to mimic reference */
+}
+
 .keptPyramid{
   width: 100%;
-  max-width: 390px;
+  max-width: 330px;
   display:grid;
   grid-template-columns: repeat(6, 1fr);
   gap:10px;
-  padding: 10px 8px;
+  padding: 8px 0;
 }
+
+/* Pyramid slot look closer to screenshot (soft gray blocks) */
 .pSlot{
   height: 58px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(0,0,0,.10);
-  border: 1px solid rgba(0,0,0,.12);
+  border: 1px solid rgba(0,0,0,.10);
 }
 .pSlot.filled{
-  background: rgba(255,255,255,.68);
+  background: rgba(255,255,255,.70);
   border: 2px solid rgba(0,0,0,.10);
   display:flex;
   align-items:center;
@@ -205,25 +189,27 @@ body{
   box-shadow: 0 6px 16px rgba(0,0,0,.10);
 }
 
-/* BOTTOM */
+/* BOTTOM controls tightened so they sit right under pyramid */
 .bottomArea{
   flex:0 0 auto;
   padding: 0 12px;
 }
 
-.tray{ padding-top: 6px; }
+/* Tray */
+.tray{ padding-top: 2px; }
 .traySlots{
   display:grid;
   grid-template-columns: repeat(6, 1fr);
   gap:10px;
-  padding: 12px 10px;
+  padding: 10px 10px;
   border-radius: 18px;
   background: linear-gradient(180deg, var(--wood1), var(--wood2));
   border: 2px solid rgba(0,0,0,.20);
-  box-shadow: 0 12px 22px rgba(0,0,0,.18);
+  box-shadow: 0 10px 18px rgba(0,0,0,.18);
 }
+
 .die{
-  height: 60px;
+  height: 58px;
   border-radius: 16px;
   border: 2px solid rgba(0,0,0,.14);
   background: rgba(0,0,0,.12);
@@ -245,15 +231,14 @@ body{
   background: rgba(245,199,106,.18);
 }
 
-/* ACTION ROW: 3 green buttons */
+/* Buttons: both rows visible */
 .actionRow{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap:12px;
-  margin: 10px 0 12px;
+  margin: 8px 0 10px; /* tighter */
 }
 
-/* ROLL BUTTON STYLE (shared) */
 .rollBtn{
   width:100%;
   border-radius: 999px;
@@ -262,30 +247,28 @@ body{
   color: white;
   font-weight:1300;
   letter-spacing: 1px;
-  box-shadow: 0 12px 18px rgba(0,0,0,.18);
-}
-.rollBtnMain{
-  padding: 16px 14px;
-  font-size: 30px;
+  box-shadow: 0 10px 16px rgba(0,0,0,.18);
 }
 .rollBtnSmall{
   padding: 12px 10px;
   font-size: 16px;
 }
+.rollBtnMain{
+  padding: 16px 14px;
+  font-size: 30px;
+}
 
-/* disabled feel like “inactive” */
 .rollBtn:disabled{
   opacity: .45;
   filter: saturate(.6);
   box-shadow: none;
 }
 
-/* BELOW FOLD LOG */
+/* BELOW FOLD (log) */
 .belowFold{
   padding: 12px;
   padding-bottom: calc(18px + var(--safeBottom));
 }
-
 .logCard{
   background: rgba(255,255,255,.65);
   border: 2px solid rgba(0,0,0,.10);
@@ -300,7 +283,6 @@ body{
   margin-bottom:8px;
 }
 .logTitle{ font-weight:1200; }
-
 .turnPill{
   margin-left:auto;
   font-size:12px;
@@ -310,7 +292,6 @@ body{
   background: rgba(0,0,0,.06);
   border: 1px solid rgba(0,0,0,.10);
 }
-
 .miniBtn{
   padding:8px 10px;
   border-radius: 12px;
@@ -334,7 +315,7 @@ body{
 .log .you{ color: #1b7a3a; font-weight:1100; }
 .log .warn{ color: #b45309; font-weight:1100; }
 
-/* Settings sheet */
+/* Settings sheet (unchanged styling, kept minimal) */
 .settingsSheet{
   position:fixed;
   inset:0;
@@ -385,7 +366,6 @@ body{
   font-weight:1100;
   text-align:right;
 }
-
 .sheetDivider{ height:1px; background: rgba(0,0,0,.10); margin: 12px 0; }
 .dangerBtn{
   width:100%;
@@ -395,7 +375,6 @@ body{
   background: linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.12));
   font-weight:1200;
 }
-
 .tinyNote{ margin-top:10px; font-size:12px; opacity:.75; }
 
 /* Switch */
