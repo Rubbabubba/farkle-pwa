@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#e9ddcf" />
   <title>Farkle PWA</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=4" />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="manifest" href="manifest.webmanifest?v=5" />
+  <link rel="stylesheet" href="style.css?v=5" />
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,28 +30,28 @@
         <button class="hudIcon" id="btnOpenSettings" title="Settings" aria-label="Settings">⚙️</button>
       </header>
 
-      <!-- TOP PANELS -->
-      <section class="topPanels">
-        <div class="playerCard">
+      <!-- TOP STRIP (COMPACT) -->
+      <section class="topStrip">
+        <div class="playerCard compact">
           <div class="avatar" aria-hidden="true">🙂</div>
           <div class="playerName" id="p1Name">You</div>
           <div class="playerScore" id="youScore">0</div>
           <div class="playerSub" id="youBoardStatus">Need 500 to board</div>
         </div>
 
-        <div class="playerCard">
+        <div class="playerCard compact">
           <div class="avatar" aria-hidden="true">🤖</div>
           <div class="playerName" id="p2Name">CPU</div>
           <div class="playerScore" id="cpuScore">0</div>
           <div class="playerSub" id="cpuBoardStatus">Need 500 to board</div>
         </div>
 
-        <div class="scoreCard scoreCardWood">
+        <div class="scoreCard compactScore">
           <div class="scoreCardHead">
             <div class="scoreCardTitle">Super Scores</div>
           </div>
 
-          <div class="scoreTable scoreTableWood">
+          <div class="scoreTable compactTable">
             <div class="scoreRow"><span>Single 1</span><b>100</b></div>
             <div class="scoreRow"><span>Single 5</span><b>50</b></div>
             <div class="scoreRow"><span>Three of a kind</span><b>1000 / face×100</b></div>
@@ -63,41 +63,26 @@
             <div class="scoreRow"><span>Six of a kind</span><b>3000</b></div>
             <div class="scoreRow"><span>1–6 Straight</span><b>1500</b></div>
             <div class="scoreRow"><span>3 Pairs</span><b>1500</b></div>
-            <div class="scoreRow"><span>4 of a kind + 1 pair</span><b>1500</b></div>
+            <div class="scoreRow"><span>4+1 pair</span><b>1500</b></div>
             <div class="scoreRow"><span>2 Triples</span><b>2500</b></div>
           </div>
         </div>
       </section>
 
-      <!-- CENTER -->
-      <section class="centerArea">
-        <div class="statsRow">
-          <div class="statBox">
-            <div class="statLabel">Turn Points</div>
-            <div class="statValue" id="turnPoints">0</div>
-          </div>
-          <div class="statBox">
-            <div class="statLabel">Selected</div>
-            <div class="statValue" id="selectedPoints">0</div>
-          </div>
-          <div class="statBox">
-            <div class="statLabel">Dice Left</div>
-            <div class="statValue" id="diceLeft">6</div>
-          </div>
-        </div>
-
-        <div class="pyramidWrap">
+      <!-- PLAYFIELD (LEFT-ALIGNED PYRAMID LIKE REF) -->
+      <section class="playField">
+        <div class="pyramidLeft">
           <div class="keptPyramid" id="keptPyramid" aria-label="Kept dice pyramid"></div>
         </div>
+        <div class="rightEmpty" aria-hidden="true"></div>
       </section>
 
-      <!-- BOTTOM -->
+      <!-- BOTTOM CONTROLS -->
       <section class="bottomArea">
         <div class="tray">
           <div class="traySlots" id="traySlots" aria-label="Dice tray"></div>
         </div>
 
-        <!-- MATCH REFERENCE: 3 BUTTONS IN ONE ROW -->
         <div class="actionRow">
           <button class="rollBtn rollBtnSmall" id="btnKeep" disabled>KEEP</button>
           <button class="rollBtn rollBtnSmall" id="btnBank" disabled>BANK</button>
@@ -109,7 +94,7 @@
 
     </section>
 
-    <!-- BELOW THE FOLD LOG -->
+    <!-- BELOW THE FOLD -->
     <section class="belowFold">
       <div class="logCard">
         <div class="logHead">
@@ -172,17 +157,14 @@
           <div class="sheetDivider"></div>
 
           <button class="dangerBtn" id="btnResetEverything">Reset EVERYTHING</button>
-
-          <div class="tinyNote">
-            Cache-bust tip: bump <code>?v=5</code> after big changes.
-          </div>
+          <div class="tinyNote">Cache-bust tip: bump <code>?v=6</code> after big changes.</div>
         </div>
       </div>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
   </div>
 </body>
 </html>
