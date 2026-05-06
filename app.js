@@ -186,42 +186,23 @@ function renderLog() {
   }
 }
 
-function resetTurnToFresh() {
-  state.turnPoints = 0;
-  state.diceLeft = 6;
-  state.tray = [];
-  state.kept = [];
-}
+function applyTransition(result) {
+  for (const event of result.events) {
+    if (event.type === 'log') logLine(event.text, event.who);
+    if (event.type === 'toast') toast(event.text);
+  }
 
-function doFarkle(whoLabel='You') {
-  resetTurnToFresh();
-  state.awaitingDone = true;
-  logLine(`${whoLabel} FARKLE — lost turn points`, 'warn');
-  toast('Farkle!');
+  state = result.state;
   saveJSON(LS_KEYS.play, state);
   render();
+  
+  return result;
 }
 
 function doRoll() {
-  if (state.gameOver) return;
-  if (state.currentPlayer !== 'you') return;
-  if (state.awaitingDone) return;
-  if (state.tray.length) return;
-
   const values = rollDice(state.diceLeft);
-  state.tray = values.map(v => ({ id: uid(), value: v, selected: false }));
-
-  logLine(`You rolled: ${values.join(', ')}`, 'you');
-
-  if (bestScoreForRoll(values) === 0) {
-    saveJSON(LS_KEYS.play, state);
-    render();
-    doFarkle('You');
-    return;
-  }
-
-  saveJSON(LS_KEYS.play, state);
-  render();
+  const dice = values.map(v => ({ id: uid(), value: v, selected: false }));
+  applyTransition(transitionGame(state, { type: ACTIONS.ROLL, dice }, settings));
 }
 
 function scheduleAutoRollIfNeeded() {
@@ -242,99 +223,19 @@ function scheduleAutoRollIfNeeded() {
 }
 
 function doKeep() {
-  if (state.gameOver) return;
-  if (state.currentPlayer !== 'you') return;
-  if (state.awaitingDone) return;
-  if (!state.tray.length) return;
-
-  const sel = state.tray.filter(d => d.selected).map(d => d.value);
-  const score = scoreSelection(sel);
-  if (score <= 0) { toast('Invalid selection'); return; }
-
-  const keptDice = [];
-  const remaining = [];
-  for (const d of state.tray) {
-    if (d.selected) keptDice.push(d.value);
-    else remaining.push(d);
+  const result = applyTransition(transitionGame(state, { type: ACTIONS.KEEP }, settings));
+  if (result.ok) scheduleAutoRollIfNeeded();
   }
-
-  state.turnPoints += score;
-  state.kept.push(...keptDice);
-  state.diceLeft = remaining.length;
-  state.tray = [];
-
-  logLine(`You kept ${keptDice.join(', ')} (+${score}), turn=${state.turnPoints}`, 'you');
-
-  if (state.diceLeft === 0) {
-    if (settings.hotDice) {
-      state.diceLeft = 6;
-      state.kept = [];
-      logLine(`You hot dice!`, 'you');
-      toast('Hot dice!');
-    } else {
-      state.awaitingDone = true;
-      logLine(`No dice left — turn ends`, 'you');
-    }
-  }
-
-  saveJSON(LS_KEYS.play, state);
-  render();
-
-  scheduleAutoRollIfNeeded();
-}
 
 function doBank() {
-  if (state.gameOver) return;
-  if (state.currentPlayer !== 'you') return;
-  if (state.awaitingDone) return;
-  if (state.turnPoints <= 0) return;
-
-  const tp = state.turnPoints;
-  const p = state.you;
-
-  if (!p.onBoard) {
-    if (tp >= settings.minEntry) {
-      p.onBoard = true;
-      p.score += tp;
-      logLine(`You banked ${tp} (on board)`, 'you');
-    } else {
-      logLine(`Bank failed (<${settings.minEntry}) — scored 0`, 'warn');
-    }
-  } else {
-    p.score += tp;
-    logLine(`You banked ${tp}`, 'you');
-  }
-
-  resetTurnToFresh();
-  state.awaitingDone = true;
-
-  if (p.score >= settings.winScore) {
-    state.gameOver = true;
-    logLine(`🏁 You win! (${p.score})`, 'you');
-    toast('You win!');
-  }
-
-  saveJSON(LS_KEYS.play, state);
-  render();
+  applyTransition(transitionGame(state, { type: ACTIONS.BANK }, settings));
 }
 
 function doDone() {
-  if (!state.awaitingDone) return;
-
-  state.awaitingDone = false;
-
-  if (state.gameOver) {
-    saveJSON(LS_KEYS.play, state);
-    render();
-    return;
+  const result = applyTransition(transitionGame(state, { type: ACTIONS.DONE }, settings));
+  if (result.events.some(event => event.type === 'cpuTurnRequested')) {
+    cpuTurn().catch(()=>{});
   }
-
-  state.currentPlayer = 'cpu';
-  resetTurnToFresh();
-  saveJSON(LS_KEYS.play, state);
-  render();
-
-  cpuTurn().catch(()=>{});
 }
 
 async function cpuTurn() {
@@ -348,6 +249,7 @@ async function cpuTurn() {
 
   let tp = 0;
   let diceLeft = 6;
+  let banked = false;
 
   for (let rollCount=1; rollCount<=8; rollCount++) {
     const values = rollDice(diceLeft);
@@ -383,27 +285,12 @@ async function cpuTurn() {
 
     const wantsBank = canBank && (tp >= threshold || rollCount >= 4);
     if (wantsBank) {
-      if (!cpu.onBoard) cpu.onBoard = true;
-      cpu.score += tp;
-      logLine(`CPU banked ${tp}`, 'cpu');
+      banked = true;
       break;
     }
   }
 
-  state.currentPlayer = 'you';
-  resetTurnToFresh();
-  state.awaitingDone = false;
-
-  if (state.cpu.score >= settings.winScore) {
-    state.gameOver = true;
-    logLine(`🏁 CPU wins! (${state.cpu.score})`, 'cpu');
-    toast('CPU wins');
-  } else {
-    toast('Your turn');
-  }
-
-  saveJSON(LS_KEYS.play, state);
-  render();
+  applyTransition(transitionGame(state, { type: ACTIONS.CPU_FINISH, banked, turnPoints: tp }, settings));
 }
 
 /* Settings */

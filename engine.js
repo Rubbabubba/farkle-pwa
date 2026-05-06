@@ -147,7 +147,183 @@
     return bestKeep;
   }
 
+
+  const ACTIONS = Object.freeze({
+    TOGGLE_DIE: 'TOGGLE_DIE',
+    ROLL: 'ROLL',
+    KEEP: 'KEEP',
+    BANK: 'BANK',
+    DONE: 'DONE',
+    CPU_FINISH: 'CPU_FINISH'
+  });
+
+  function cloneState(state) {
+    return {
+      currentPlayer: state.currentPlayer,
+      you: { ...state.you },
+      cpu: { ...state.cpu },
+      turnPoints: state.turnPoints,
+      diceLeft: state.diceLeft,
+      tray: Array.isArray(state.tray) ? state.tray.map(d => ({ ...d })) : [],
+      kept: Array.isArray(state.kept) ? state.kept.slice() : [],
+      awaitingDone: !!state.awaitingDone,
+      gameOver: !!state.gameOver
+    };
+  }
+
+  function resetTurnCopy(next) {
+    next.turnPoints = 0;
+    next.diceLeft = 6;
+    next.tray = [];
+    next.kept = [];
+    return next;
+  }
+
+  function ignoredTransition(state, reason) {
+    return { state, events: [], ok: false, reason };
+  }
+
+  function transitionGame(stateIn, action, settings = DEFAULT_SETTINGS) {
+    const type = action && action.type;
+    const next = cloneState(stateIn);
+    const events = [];
+    const yourActiveTurn = next.currentPlayer === 'you' && !next.gameOver && !next.awaitingDone;
+
+    if (type === ACTIONS.TOGGLE_DIE) {
+      if (!yourActiveTurn) return ignoredTransition(stateIn, 'not_your_active_turn');
+      const die = next.tray.find(d => d.id === action.id);
+      if (!die) return ignoredTransition(stateIn, 'die_not_found');
+      die.selected = !die.selected;
+      return { state: next, events, ok: true };
+    }
+
+    if (type === ACTIONS.ROLL) {
+      if (!yourActiveTurn) return ignoredTransition(stateIn, 'not_your_active_turn');
+      if (next.tray.length) return ignoredTransition(stateIn, 'tray_not_empty');
+
+      next.tray = action.dice.map(d => ({ ...d, selected: false }));
+      const values = next.tray.map(d => d.value);
+      events.push({ type: 'log', text: `You rolled: ${values.join(', ')}`, who: 'you' });
+
+      if (bestScoreForRoll(values) === 0) {
+        resetTurnCopy(next);
+        next.awaitingDone = true;
+        events.push({ type: 'log', text: 'You FARKLE — lost turn points', who: 'warn' });
+        events.push({ type: 'toast', text: 'Farkle!' });
+      }
+
+      return { state: next, events, ok: true };
+    }
+
+    if (type === ACTIONS.KEEP) {
+      if (!yourActiveTurn) return ignoredTransition(stateIn, 'not_your_active_turn');
+      if (!next.tray.length) return ignoredTransition(stateIn, 'tray_empty');
+
+      const keptDice = next.tray.filter(d => d.selected).map(d => d.value);
+      const score = scoreSelection(keptDice);
+      if (score <= 0) {
+        return {
+          state: stateIn,
+          events: [{ type: 'toast', text: 'Invalid selection' }],
+          ok: false,
+          reason: 'invalid_selection'
+        };
+      }
+
+      const remaining = next.tray.filter(d => !d.selected);
+      next.turnPoints += score;
+      next.kept.push(...keptDice);
+      next.diceLeft = remaining.length;
+      next.tray = [];
+      events.push({ type: 'log', text: `You kept ${keptDice.join(', ')} (+${score}), turn=${next.turnPoints}`, who: 'you' });
+
+      if (next.diceLeft === 0) {
+        if (settings.hotDice) {
+          next.diceLeft = 6;
+          next.kept = [];
+          events.push({ type: 'log', text: 'You hot dice!', who: 'you' });
+          events.push({ type: 'toast', text: 'Hot dice!' });
+        } else {
+          next.awaitingDone = true;
+          events.push({ type: 'log', text: 'No dice left — turn ends', who: 'you' });
+        }
+      }
+
+      return { state: next, events, ok: true };
+    }
+
+    if (type === ACTIONS.BANK) {
+      if (!yourActiveTurn) return ignoredTransition(stateIn, 'not_your_active_turn');
+      if (next.turnPoints <= 0) return ignoredTransition(stateIn, 'no_turn_points');
+
+      const tp = next.turnPoints;
+      const player = next.you;
+      if (!player.onBoard) {
+        if (tp >= settings.minEntry) {
+          player.onBoard = true;
+          player.score += tp;
+          events.push({ type: 'log', text: `You banked ${tp} (on board)`, who: 'you' });
+        } else {
+          events.push({ type: 'log', text: `Bank failed (<${settings.minEntry}) — scored 0`, who: 'warn' });
+        }
+      } else {
+        player.score += tp;
+        events.push({ type: 'log', text: `You banked ${tp}`, who: 'you' });
+      }
+
+      resetTurnCopy(next);
+      next.awaitingDone = true;
+
+      if (player.score >= settings.winScore) {
+        next.gameOver = true;
+        events.push({ type: 'log', text: `🏁 You win! (${player.score})`, who: 'you' });
+        events.push({ type: 'toast', text: 'You win!' });
+      }
+
+      return { state: next, events, ok: true };
+    }
+
+    if (type === ACTIONS.DONE) {
+      if (!next.awaitingDone) return ignoredTransition(stateIn, 'not_awaiting_done');
+      next.awaitingDone = false;
+      if (!next.gameOver) {
+        next.currentPlayer = 'cpu';
+        resetTurnCopy(next);
+        events.push({ type: 'cpuTurnRequested' });
+      }
+      return { state: next, events, ok: true };
+    }
+
+    if (type === ACTIONS.CPU_FINISH) {
+      if (next.currentPlayer !== 'cpu' || next.gameOver) return ignoredTransition(stateIn, 'not_cpu_turn');
+
+      const turnPoints = action.turnPoints || 0;
+      if (action.banked && turnPoints > 0) {
+        if (!next.cpu.onBoard) next.cpu.onBoard = true;
+        next.cpu.score += turnPoints;
+        events.push({ type: 'log', text: `CPU banked ${turnPoints}`, who: 'cpu' });
+      }
+
+      next.currentPlayer = 'you';
+      resetTurnCopy(next);
+      next.awaitingDone = false;
+
+      if (next.cpu.score >= settings.winScore) {
+        next.gameOver = true;
+        events.push({ type: 'log', text: `🏁 CPU wins! (${next.cpu.score})`, who: 'cpu' });
+        events.push({ type: 'toast', text: 'CPU wins' });
+      } else {
+        events.push({ type: 'toast', text: 'Your turn' });
+      }
+
+      return { state: next, events, ok: true };
+    }
+
+    return ignoredTransition(stateIn, 'unknown_action');
+  }
+
   return {
+    ACTIONS,
     DEFAULT_SETTINGS,
     bestScoreForRoll,
     countDice,
@@ -158,6 +334,7 @@
     rollDice,
     scoreCounts,
     scoreSelection,
-    totalCount
+    totalCount,
+    transitionGame
   };
 });
