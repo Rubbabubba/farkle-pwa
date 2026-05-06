@@ -1,12 +1,17 @@
-const CACHE_VERSION = 'v6';
+importScripts('./version.js');
+
+const CACHE_VERSION = FARKLE_APP_VERSION;
 const CACHE_NAME = `farkle-pwa-${CACHE_VERSION}`;
+const ASSET_VERSION = CACHE_VERSION.replace(/^v/, '');
 
 const ASSETS = [
   './',
-  './index.html?v=5',
-  './style.css?v=5',
-  './app.js?v=5',
-  './manifest.webmanifest?v=5',
+  `./index.html?v=${ASSET_VERSION}`,
+  `./style.css?v=${ASSET_VERSION}`,
+  `./version.js?v=${ASSET_VERSION}`,
+  `./engine.js?v=${ASSET_VERSION}`,
+  `./app.js?v=${ASSET_VERSION}`,
+  `./manifest.webmanifest?v=${ASSET_VERSION}`,
   './assets/icon-192.png',
   './assets/icon-512.png'
 ];
