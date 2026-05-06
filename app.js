@@ -127,13 +127,69 @@ function scoreExact(countsIn) {
   return res < 0 ? 0 : res;
 }
 
+
+function scoreAllDice(countsIn) {
+  const memo = new Map();
+  const keyOf = (c) => c.slice(1).join('');
+
+  function rec(counts) {
+    const key = keyOf(counts);
+    if (memo.has(key)) return memo.get(key);
+
+    const dice = totalCount(counts);
+    if (dice === 0) return 0;
+
+    let best = -Infinity;
+
+    if (dice === 6) {
+      const isStraight = [1,2,3,4,5,6].every(f => counts[f] === 1);
+      if (isStraight) best = Math.max(best, 1500);
+
+      const pairs = [1,2,3,4,5,6].filter(f => counts[f] === 2).length;
+      if (pairs === 3) best = Math.max(best, 1500);
+
+      const triples = [1,2,3,4,5,6].filter(f => counts[f] === 3).length;
+      if (triples === 2) best = Math.max(best, 2500);
+
+      const has4 = [1,2,3,4,5,6].some(f => counts[f] === 4);
+      const has2 = [1,2,3,4,5,6].some(f => counts[f] === 2);
+      if (has4 && has2) best = Math.max(best, 1500);
+    }
+
+    for (let f=1; f<=6; f++) {
+      if (counts[f] >= 6) { const c2 = counts.slice(); c2[f]-=6; best = Math.max(best, 3000 + rec(c2)); }
+      if (counts[f] >= 5) { const c2 = counts.slice(); c2[f]-=5; best = Math.max(best, 2000 + rec(c2)); }
+      if (counts[f] >= 4) { const c2 = counts.slice(); c2[f]-=4; best = Math.max(best, 1000 + rec(c2)); }
+    }
+
+    for (let f=1; f<=6; f++) {
+      if (counts[f] >= 3) {
+        const base = (f === 1) ? 1000 : f * 100;
+        const c2 = counts.slice(); c2[f]-=3;
+        best = Math.max(best, base + rec(c2));
+      }
+    }
+
+    if (counts[1] >= 1) { const c2 = counts.slice(); c2[1]-=1; best = Math.max(best, 100 + rec(c2)); }
+    if (counts[5] >= 1) { const c2 = counts.slice(); c2[5]-=1; best = Math.max(best, 50 + rec(c2)); }
+
+    memo.set(key, best);
+    return best;
+  }
+
+  const res = rec(countsIn.slice());
+  return res < 0 ? 0 : res;
+}
+
 function bestScoreForRoll(values) {
   return scoreExact(countDice(values));
 }
+
 function scoreSelection(values) {
   if (!values.length) return 0;
-  return scoreExact(countDice(values));
+  return scoreAllDice(countDice(values));
 }
+
 
 function newState() {
   return {
